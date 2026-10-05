@@ -196,11 +196,11 @@ int vfs_statx_fd(unsigned int fd, struct kstat *stat,
 	struct fd f;
 	int error = -EBADF;
 
-	if (query_flags & ~KSTAT_QUERY_FLAGS)
 #ifdef CONFIG_KSU_SUSFS
 	if (static_branch_unlikely(&ksu_is_init_rc_hook_enabled))
 		ksu_handle_vfs_fstat(fd, &stat->size);
 #endif // #ifdef CONFIG_KSU_SUSFS
+	if (query_flags & ~KSTAT_QUERY_FLAGS)
 		return -EINVAL;
 
 	f = fdget_raw(fd);
