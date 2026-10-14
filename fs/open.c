@@ -356,7 +356,10 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
 extern bool ksu_su_compat_enabled;
 extern bool __ksu_is_allow_uid_for_current(uid_t uid);
 #define ksu_is_allow_uid_for_current(uid) unlikely(__ksu_is_allow_uid_for_current(uid))
-extern int ksu_handle_faccessat(int *dfd, struct filename **filename, int *mode, int *__unused_flags);
+#endif
+#ifdef CONFIG_KSU
+extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user,
+				int *mode, int *flags);
 #endif
 
 long do_faccessat(int dfd, const char __user *filename, int mode)
@@ -367,6 +370,10 @@ long do_faccessat(int dfd, const char __user *filename, int mode)
 	struct inode *inode;
 	int res;
 	unsigned int lookup_flags = LOOKUP_FOLLOW;
+
+#ifdef CONFIG_KSU
+	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
+#endif
 
 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
 		return -EINVAL;
@@ -414,10 +421,6 @@ retry:
 	{
 		struct filename *fname = getname_flags(filename, lookup_flags, NULL);
 
-		if (likely(!susfs_is_current_proc_no_su()) && ksu_su_compat_enabled) {
-			if (ksu_is_allow_uid_for_current(current_uid().val))
-				ksu_handle_faccessat(&dfd, &fname, &mode, NULL);
-		}
 		res = filename_lookup(dfd, fname, lookup_flags, &path, NULL);
 		/* no putname(fname) here as filename_lookup() has it done for us already */
 	}

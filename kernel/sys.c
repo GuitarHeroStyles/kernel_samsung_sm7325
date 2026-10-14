@@ -63,6 +63,10 @@
 #include <linux/uidgid.h>
 #include <linux/cred.h>
 
+#ifdef CONFIG_KSU
+extern int ksu_handle_setresuid(uid_t old_uid, uid_t new_uid);
+#endif
+
 #include <linux/nospec.h>
 
 #include <linux/kmsg_dump.h>
@@ -621,10 +625,6 @@ SYSCALL_DEFINE1(setuid, uid_t, uid)
 	return __sys_setuid(uid);
 }
 
-#ifdef CONFIG_KSU_SUSFS
-extern int ksu_handle_setresuid(uid_t ruid, uid_t euid, uid_t suid);
-#endif
-
 /*
  * This function implements a generic ability to update ruid, euid,
  * and suid.  This allows you to implement the 4.4 compatible seteuid().
@@ -636,10 +636,6 @@ long __sys_setresuid(uid_t ruid, uid_t euid, uid_t suid)
 	struct cred *new;
 	int retval;
 	kuid_t kruid, keuid, ksuid;
-
-#ifdef CONFIG_KSU_SUSFS
-	(void)ksu_handle_setresuid(ruid, euid, suid);
-#endif
 
 	kruid = make_kuid(ns, ruid);
 	keuid = make_kuid(ns, euid);
@@ -690,6 +686,11 @@ long __sys_setresuid(uid_t ruid, uid_t euid, uid_t suid)
 	retval = security_task_fix_setuid(new, old, LSM_SETID_RES);
 	if (retval < 0)
 		goto error;
+
+#ifdef CONFIG_KSU
+	if (ruid != (uid_t) -1)
+		ksu_handle_setresuid(current_uid().val, ruid);
+#endif
 
 	return commit_creds(new);
 
