@@ -9,6 +9,14 @@ NAME = Kleptomaniac Octopus
 # present in the kernel so that out-of-tree modules can act upon it
 export KERNEL_SUPPORTS_NESTED_COMPOSITES := y
 
+# a52sxq: legacy branch's commit count lags behind the dev branch where
+# v3.4.2 was tagged, and git describe on this branch still resolves to
+# the old v3.4.0-legacy tag, so pin what KernelSU-Next reports to the
+# Manager (uses KSU_VERSION_OVERRIDE/KSU_VERSION_TAG_OVERRIDE hooks
+# already present in KernelSU-Next's kernel/Kbuild upstream).
+export KSU_VERSION_OVERRIDE := 33644
+export KSU_VERSION_TAG_OVERRIDE := v3.4.2
+
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README
