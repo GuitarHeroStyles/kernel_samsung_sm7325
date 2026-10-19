@@ -14,8 +14,8 @@ export KERNEL_SUPPORTS_NESTED_COMPOSITES := y
 # the old v3.4.0-legacy tag, so pin what KernelSU-Next reports to the
 # Manager (uses KSU_VERSION_OVERRIDE/KSU_VERSION_TAG_OVERRIDE hooks
 # already present in KernelSU-Next's kernel/Kbuild upstream).
-export KSU_VERSION_OVERRIDE := 33314
-export KSU_VERSION_TAG_OVERRIDE := v3.4.2
+export KSU_VERSION_OVERRIDE := 33355
+export KSU_VERSION_TAG_OVERRIDE := v3.4.2-legacy
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
