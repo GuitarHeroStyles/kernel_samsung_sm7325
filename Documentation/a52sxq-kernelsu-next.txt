@@ -1,0 +1,35 @@
+Galaxy A52s 5G (a52sxq) - KernelSU-Next build notes
+===================================================
+
+Root solution
+-------------
+- KernelSU-Next, built in (CONFIG_KSU=y), manual hooks, with SUSFS v2.3.0.
+- Source: the KernelSU-Next submodule, pointing at
+  GuitarHeroStyles/KernelSU-Next branch sixteen-ksun-susfs
+  (upstream KernelSU-Next legacy + SUSFS integration).
+- drivers/kernelsu is a symlink to ../KernelSU-Next/kernel, so the
+  submodule must be initialized before building:
+
+    git submodule update --init
+
+Versioning
+----------
+- Version code and tag shown in the manager are pinned in the top-level
+  Makefile (KSU_VERSION_OVERRIDE / KSU_VERSION_TAG_OVERRIDE).
+- What decides whether the manager accepts the kernel is the UAPI
+  version (KERNEL_SU_UAPI_VERSION in KernelSU-Next/uapi/supercall.h),
+  shown after the dash in the manager, e.g. "(33355-6)". Kernel and
+  manager UAPI must match exactly. Upstream legacy is at UAPI 6 since
+  module preinit was added, so use a manager built with UAPI 6.
+- CONFIG_LOCALVERSION_AUTO is off, so the kernel release string ends at
+  the LOCALVERSION set by the build script (no -g<sha> suffix).
+
+Building
+--------
+Built with Action-Kernel-Builder using the vendor/a52sxq_eur_open_defconfig
+defconfig and the yupik.dtb device tree:
+
+    ./build_a52sxq.sh -c -n
+
+The rebuilt kernel modules are packed into the vendor_boot ramdisk so their
+vermagic matches the new kernel.
