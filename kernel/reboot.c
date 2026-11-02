@@ -326,12 +326,11 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 	int ret = 0;
 
 #ifdef CONFIG_KSU_SUSFS
-	ret = ksu_handle_sys_reboot(magic1, magic2, cmd, &arg);
-	if (ret) {
-		goto orig_flow;
-	}
-	return ret;
-orig_flow:
+	/*
+	 * KernelSU-Next only handles its supercall magic here and always
+	 * returns 0; the reboot itself must still go through the original flow.
+	 */
+	ksu_handle_sys_reboot(magic1, magic2, cmd, &arg);
 #endif
 
 	/* We only trust the superuser with rebooting the system. */
