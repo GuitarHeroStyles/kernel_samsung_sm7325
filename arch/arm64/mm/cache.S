@@ -182,6 +182,7 @@ ENTRY(__flush_dcache_area)
 	dcache_by_line_op civac, sy, x0, x1, x2, x3
 	ret
 ENDPIPROC(__flush_dcache_area)
+EXPORT_SYMBOL(__flush_dcache_area)
 
 /*
  *	__clean_dcache_area_pou(kaddr, size)

@@ -2272,6 +2272,7 @@ static bool is_mnt_ns_file(struct dentry *dentry)
 	return dentry->d_op == &ns_dentry_operations &&
 	       dentry->d_fsdata == &mntns_operations;
 }
+EXPORT_SYMBOL(path_umount);
 
 struct mnt_namespace *to_mnt_ns(struct ns_common *ns)
 {
@@ -3969,6 +3970,7 @@ dput_out:
 	path_put(&path);
 	return retval;
 }
+EXPORT_SYMBOL(do_mount);
 
 static struct ucounts *inc_mnt_namespaces(struct user_namespace *ns)
 {
@@ -4935,6 +4937,7 @@ const struct proc_ns_operations mntns_operations = {
 	.install	= mntns_install,
 	.owner		= mntns_owner,
 };
+EXPORT_SYMBOL(mntns_operations);
 
 #ifdef CONFIG_KSU_SUSFS
 /* - To retrieve the non sus mnt_id from mount */

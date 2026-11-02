@@ -3535,3 +3535,4 @@ int policydb_write(struct policydb *p, void *fp)
 
 	return 0;
 }
+EXPORT_SYMBOL(policydb_write);

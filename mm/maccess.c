@@ -61,6 +61,7 @@ Efault:
 	pagefault_enable();
 	return -EFAULT;
 }
+EXPORT_SYMBOL(copy_to_kernel_nofault);
 
 long strncpy_from_kernel_nofault(char *dst, const void *unsafe_addr, long count)
 {
@@ -175,6 +176,7 @@ long copy_to_kernel_nofault(void *dst, const void *src, size_t size)
 		return -EFAULT;
 	return 0;
 }
+EXPORT_SYMBOL(copy_to_kernel_nofault);
 
 /**
  * copy_to_user_nofault(): safely attempt to write to a user-space location
@@ -291,6 +293,7 @@ long strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr,
 
 	return ret;
 }
+EXPORT_SYMBOL(strncpy_from_user_nofault);
 
 /**
  * strnlen_unsafe_user: - Get the size of a user string INCLUDING final NUL.

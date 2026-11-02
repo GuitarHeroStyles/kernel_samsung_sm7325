@@ -200,6 +200,7 @@ unsigned long kallsyms_lookup_name(const char *name)
 	}
 	return module_kallsyms_lookup_name(name);
 }
+EXPORT_SYMBOL(kallsyms_lookup_name);
 
 int kallsyms_on_each_symbol(int (*fn)(void *, const char *, struct module *,
 				      unsigned long),
@@ -341,6 +342,7 @@ found:
 	cleanup_symbol_name(namebuf);
 	return ret;
 }
+EXPORT_SYMBOL(kallsyms_lookup);
 
 int lookup_symbol_name(unsigned long addr, char *symname)
 {
