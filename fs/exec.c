@@ -1766,7 +1766,7 @@ static int exec_binprm(struct linux_binprm *bprm)
 /*
  * sys_execve() executes a new program.
  */
-#ifdef CONFIG_KSU_SUSFS
+#if defined(CONFIG_KSU_SUSFS) && defined(CONFIG_KSU)
 extern bool ksu_su_compat_enabled;
 extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,
 			void *envp, int *flags);
@@ -1785,7 +1785,7 @@ static int __do_execve_file(int fd, struct filename *filename,
 	if (IS_ERR(filename))
 		return PTR_ERR(filename);
 
-#ifdef CONFIG_KSU_SUSFS
+#if defined(CONFIG_KSU_SUSFS) && defined(CONFIG_KSU)
 	if (likely(!susfs_is_current_proc_no_su()) && ksu_su_compat_enabled)
 		(void)ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
 #endif

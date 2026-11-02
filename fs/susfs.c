@@ -21,13 +21,46 @@
 #include <linux/fsnotify_backend.h>
 #include <linux/jump_label.h>
 #include <linux/security.h>
+#include <linux/export.h>
 #include <linux/susfs.h>
 #include "fuse/fuse_i.h"
 #include "mount.h"
 
+#ifdef CONFIG_KSU_MODULE
+/*
+ * KernelSU is a loadable module: SUSFS is built in and runs before it is
+ * loaded, so the state both sides share lives here and the module fills it.
+ */
+struct cred *ksu_cred;
+EXPORT_SYMBOL(ksu_cred);
+u32 susfs_ksu_sid;
+EXPORT_SYMBOL(susfs_ksu_sid);
+u32 susfs_priv_app_sid;
+EXPORT_SYMBOL(susfs_priv_app_sid);
+bool (*susfs_ksu_is_current_domain_fn)(void);
+EXPORT_SYMBOL(susfs_ksu_is_current_domain_fn);
+void (*susfs_ksu_setup_selinux_fn)(const char *domain, struct cred *cred);
+EXPORT_SYMBOL(susfs_ksu_setup_selinux_fn);
+
+bool susfs_is_current_ksu_domain(void)
+{
+	bool (*fn)(void) = READ_ONCE(susfs_ksu_is_current_domain_fn);
+
+	return fn ? fn() : false;
+}
+
+static void setup_selinux(const char *domain, struct cred *cred)
+{
+	void (*fn)(const char *, struct cred *) = READ_ONCE(susfs_ksu_setup_selinux_fn);
+
+	if (fn)
+		fn(domain, cred);
+}
+#else
 extern bool susfs_is_current_ksu_domain(void);
 extern void setup_selinux(const char *domain, struct cred *cred);
 extern struct cred *ksu_cred;
+#endif
 extern int susfs_get_non_sus_mnt_id_from_mnt(struct mount *orig_mnt);
 extern struct vfsmount *susfs_get_non_sus_vfsmnt_from_vfsmnt(struct vfsmount *vfsmnt);
 
@@ -98,6 +131,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_ADD_SUS_PATH -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_add_sus_path);
 
 void susfs_add_sus_path_loop(void __user **user_info) {
 	struct st_susfs_sus_path_list *new_list = NULL;
@@ -133,6 +167,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_ADD_SUS_PATH_LOOP -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_add_sus_path_loop);
 
 static void susfs_run_sus_path_loop(void) {
 	struct st_susfs_sus_path_list *cursor = NULL;
@@ -267,6 +302,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_HIDE_SUS_MNTS_FOR_NON_SU_PROCS -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_set_hide_sus_mnts_for_non_su_procs);
 #endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 
 /* sus_kstat */
@@ -462,6 +498,7 @@ out_copy_to_user:
 		SUSFS_LOGI("CMD_SUSFS_ADD_SUS_KSTAT_STATICALLY -> ret: %d\n", info.err);
 	}
 }
+EXPORT_SYMBOL(susfs_add_sus_kstat);
 
 void susfs_update_sus_kstat(void __user **user_info) {
 	struct st_susfs_sus_kstat info = {0};
@@ -516,6 +553,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_UPDATE_SUS_KSTAT -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_update_sus_kstat);
 
 __attribute__((hot)) bool susfs_is_inode_sus_kstat(struct inode *inode, bool *out_is_fuse) {
 	struct fuse_inode *fi = NULL;
@@ -752,6 +790,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_SET_UNAME -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_set_uname);
 
 void susfs_spoof_uname(struct new_utsname* tmp) {
 	unsigned seq;
@@ -789,6 +828,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_ENABLE_LOG -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_enable_log);
 #endif // #ifdef CONFIG_KSU_SUSFS_ENABLE_LOG
 
 /* spoof_cmdline_or_bootconfig */
@@ -849,6 +889,7 @@ out_copy_to_user:
 		kfree(info);
 	}
 }
+EXPORT_SYMBOL(susfs_set_cmdline_or_bootconfig);
 
 void susfs_spoof_cmdline_or_bootconfig(struct seq_file *m) {
 	unsigned seq;
@@ -1031,6 +1072,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_ADD_OPEN_REDIRECT -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_add_open_redirect);
 
 struct filename *susfs_open_redirect_spoof_do_sys_openat(struct inode *inode) {
 	struct st_susfs_open_redirect_hlist *entry = NULL;
@@ -1189,6 +1231,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_ADD_SUS_MAP -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_add_sus_map);
 #endif // #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 
 /* susfs avc log spoofing */
@@ -1217,6 +1260,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_ENABLE_AVC_LOG_SPOOFING -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_set_avc_log_spoofing);
 
 /* get susfs enabled features */
 static int copy_config_to_buf(const char *config_string, char *buf_ptr, size_t *copied_size, size_t bufsize) {
@@ -1308,6 +1352,7 @@ out_copy_to_user:
 		kfree(info);
 	}
 }
+EXPORT_SYMBOL(susfs_get_enabled_features);
 
 /* show_variant */
 void susfs_show_variant(void __user **user_info) {
@@ -1326,6 +1371,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_SHOW_VARIANT -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_show_variant);
 
 /* show version */
 void susfs_show_version(void __user **user_info) {
@@ -1344,6 +1390,7 @@ out_copy_to_user:
 	}
 	SUSFS_LOGI("CMD_SUSFS_SHOW_VERSION -> ret: %d\n", info.err);
 }
+EXPORT_SYMBOL(susfs_show_version);
 
 /* kthread for checking if /sdcard/Android is accessible via fsnoitfy */
 /* code is straightly borrowed from KernelSU's pkg_observer.c */
@@ -1534,6 +1581,7 @@ void susfs_init(void) {\
 	INIT_WORK(&susfs_extra_works, susfs_run_extra_works);
 	SUSFS_LOGI("susfs is initialized! version: " SUSFS_VERSION " \n");
 }
+EXPORT_SYMBOL(susfs_init);
 
 /* No module exit is needed becuase it should never be a loadable kernel module */
 //void __init susfs_exit(void)

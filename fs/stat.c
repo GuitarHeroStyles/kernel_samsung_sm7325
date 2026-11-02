@@ -27,7 +27,7 @@
 #include "internal.h"
 #endif
 
-#ifdef CONFIG_KSU_SUSFS
+#if defined(CONFIG_KSU_SUSFS) && defined(CONFIG_KSU)
 extern struct static_key_true ksu_is_init_rc_hook_enabled;
 extern void ksu_handle_vfs_fstat(int fd, loff_t *kstat_size_ptr);
 extern bool ksu_su_compat_enabled;
@@ -202,7 +202,7 @@ int vfs_statx_fd(unsigned int fd, struct kstat *stat,
 	struct fd f;
 	int error = -EBADF;
 
-#ifdef CONFIG_KSU_SUSFS
+#if defined(CONFIG_KSU_SUSFS) && defined(CONFIG_KSU)
 	if (static_branch_unlikely(&ksu_is_init_rc_hook_enabled))
 		ksu_handle_vfs_fstat(fd, &stat->size);
 #endif // #ifdef CONFIG_KSU_SUSFS
