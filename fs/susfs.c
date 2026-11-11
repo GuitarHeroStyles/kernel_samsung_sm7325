@@ -1567,6 +1567,7 @@ void susfs_start_sdcard_monitor_fn(void) {
 // - defer extra susfs works to workqueue after do_umount in ksu_handle_setresuid()
 //   so that we do not block there and reduce the risk of time side channel as much as possible.
 struct work_struct susfs_extra_works;
+EXPORT_SYMBOL(susfs_extra_works);
 static void susfs_run_extra_works(struct work_struct *work) {
 	if (!ksu_cred)
 		return;
